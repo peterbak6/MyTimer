@@ -52,7 +52,8 @@
         let isRunning = false;
         let seconds = 0;
         let previousMinute = 0;
-    
+        let gongReady = false; // Flag to check if the gong sound can be played
+
         const timerElement = document.getElementById("time");
         const timerContainer = document.getElementById("timer");
         const gongSound = document.getElementById("gong-sound");
@@ -73,10 +74,12 @@
                 console.error(`Failed to acquire wake lock: ${err.name}, ${err.message}`);
             }
         }
-        // Function to play the gong sound only after user interaction
-        function playGong() {
-            gongSound.currentTime = 0; // Reset sound to start
-            gongSound.play().catch(error => console.log('Audio playback failed:', error));
+        
+         function playGong() {
+            if (gongReady) {
+                gongSound.currentTime = 0; // Reset sound to start
+                gongSound.play().catch(error => console.log('Audio playback failed:', error));
+            }
         }
     
         function updateTime() {
@@ -96,6 +99,7 @@
         function startTimer() {
             timerContainer.style.backgroundColor = '#a6d854'; // Pastel blue when running
             requestWakeLock(); // Request wake lock
+            gongReady = true; // Allow gong sound to play
             timer = setInterval(() => {
                 seconds++;
                 updateTime();
@@ -105,6 +109,8 @@
         function stopTimer() {
             clearInterval(timer);
             timerContainer.style.backgroundColor = '#ffd92f'; // Pastel yellow when stopped
+            releaseWakeLock(); // Release the wake lock when stopped
+            gongReady = false; // Disable gong sound
         }
     
         timerContainer.addEventListener("click", () => {
@@ -131,9 +137,8 @@
             releaseWakeLock(); // Release the wake lock on reset
         });
 
-    
-        updateTime();
         window.addEventListener('beforeunload', releaseWakeLock);
+        updateTime();
     </script>
 </body>
 </html>
