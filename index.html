@@ -100,6 +100,7 @@
             timerContainer.style.backgroundColor = '#a6d854'; // Pastel blue when running
             requestWakeLock(); // Request wake lock
             gongReady = true; // Allow gong sound to play
+            playGong();
             timer = setInterval(() => {
                 seconds++;
                 updateTime();
