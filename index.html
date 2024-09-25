@@ -56,7 +56,23 @@
         const timerElement = document.getElementById("time");
         const timerContainer = document.getElementById("timer");
         const gongSound = document.getElementById("gong-sound");
-    
+
+         function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    console.log('Screen Wake Lock has been released.');
+                });
+            }
+        }
+        async function requestWakeLock() {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Screen Wake Lock is active.');
+            } catch (err) {
+                console.error(`Failed to acquire wake lock: ${err.name}, ${err.message}`);
+            }
+        }
         // Function to play the gong sound only after user interaction
         function playGong() {
             gongSound.currentTime = 0; // Reset sound to start
@@ -79,6 +95,7 @@
     
         function startTimer() {
             timerContainer.style.backgroundColor = '#d0e7ff'; // Pastel blue when running
+            requestWakeLock(); // Request wake lock
             timer = setInterval(() => {
                 seconds++;
                 updateTime();
@@ -111,11 +128,14 @@
             updateTime();
             isRunning = false;
             timerContainer.style.backgroundColor = '#d4eacd'; // Reset to pastel green when idle
+            releaseWakeLock(); // Release the wake lock on reset
         });
+
     
         // Initialize display to 00:00 and set background to pastel green (idle)
         updateTime();
         timerContainer.style.backgroundColor = '#d4eacd';
+        window.addEventListener('beforeunload', releaseWakeLock);
     </script>
 </body>
 </html>
