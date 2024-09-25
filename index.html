@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer App with Gong Sound</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .timer-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            background-color: #f2f2f2; 
+            user-select: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            font-size: 8rem;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container" id="timer">
+        <h1 id="time">00:00</h1>
+    </div>
+
+    <!-- Audio file for the gong sound -->
+    <audio id="gong-sound" preload="auto">
+        <source src="gong.mp3" type="audio/mpeg">
+        <source src="gong.ogg" type="audio/ogg">
+    </audio>
+
+    <script>
+        let timer;
+        let isRunning = false;
+        let seconds = 0;
+        let previousMinute = 0;
+
+        const timerElement = document.getElementById("time");
+        const timerContainer = document.getElementById("timer");
+        const gongSound = document.getElementById("gong-sound");
+
+        function updateTime() {
+            const minutes = Math.floor(seconds / 60);
+            const displaySeconds = seconds % 60;
+
+            // Play gong sound when minutes increase
+            if (minutes > previousMinute) {
+                gongSound.play();
+                previousMinute = minutes;
+            }
+
+            timerElement.textContent = 
+                String(minutes).padStart(2, '0') + ':' + String(displaySeconds).padStart(2, '0');
+        }
+
+        function startTimer() {
+            timerContainer.style.backgroundColor = '#a6d854'; // Pastel green when running
+            timer = setInterval(() => {
+                seconds++;
+                updateTime();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timer);
+            timerContainer.style.backgroundColor = '#ffd92f'; // Pastel yellow when stopped
+        }
+
+        timerContainer.addEventListener("click", () => {
+            if (!isRunning) {
+                startTimer();
+            } else {
+                stopTimer();
+            }
+            isRunning = !isRunning;
+        });
+
+        timerContainer.addEventListener("dblclick", () => {
+            stopTimer();
+            seconds = 0;
+            previousMinute = 0;
+            updateTime();
+            isRunning = false;
+            timerContainer.style.backgroundColor = '#f2f2f2'; // Reset to pastel green when idle
+        });
+
+        // Initialize display to 00:00 and set background to pastel green (idle)
+        updateTime();
+    </script>
+</body>
+</html>
