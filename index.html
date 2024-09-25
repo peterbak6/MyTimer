@@ -94,7 +94,7 @@
         }
     
         function startTimer() {
-            timerContainer.style.backgroundColor = '#d0e7ff'; // Pastel blue when running
+            timerContainer.style.backgroundColor = '#a6d854'; // Pastel blue when running
             requestWakeLock(); // Request wake lock
             timer = setInterval(() => {
                 seconds++;
@@ -104,7 +104,7 @@
     
         function stopTimer() {
             clearInterval(timer);
-            timerContainer.style.backgroundColor = '#fff2b3'; // Pastel yellow when stopped
+            timerContainer.style.backgroundColor = '#ffd92f'; // Pastel yellow when stopped
         }
     
         timerContainer.addEventListener("click", () => {
@@ -132,9 +132,7 @@
         });
 
     
-        // Initialize display to 00:00 and set background to pastel green (idle)
         updateTime();
-        timerContainer.style.backgroundColor = '#d4eacd';
         window.addEventListener('beforeunload', releaseWakeLock);
     </script>
 </body>
