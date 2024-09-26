@@ -54,12 +54,12 @@
         let previousMinute = 0;
         let gongReady = false; // Flag to check if the gong sound can be played
         let audioUnlocked = false; // Flag to ensure audio is unlocked on iOS
-
+    
         const timerElement = document.getElementById("time");
         const timerContainer = document.getElementById("timer");
         const gongSound = document.getElementById("gong-sound");
         const silentAudio = document.getElementById("silent-audio");
-
+    
         async function requestWakeLock() {
             // Wake lock to prevent the screen from locking
             try {
@@ -69,7 +69,7 @@
                 console.error(`Failed to acquire wake lock: ${err.name}, ${err.message}`);
             }
         }
-
+    
         function releaseWakeLock() {
             if (wakeLock) {
                 wakeLock.release().then(() => {
@@ -78,55 +78,58 @@
                 });
             }
         }
-
+    
         function playGong() {
             if (gongReady && audioUnlocked) {
                 gongSound.currentTime = 0; // Reset sound to start
                 gongSound.play().catch(error => console.log('Audio playback failed:', error));
             }
         }
-
+    
         function updateTime() {
             const minutes = Math.floor(seconds / 60);
             const displaySeconds = seconds % 60;
-
+    
             // Play gong sound when minutes increase
             if (minutes > previousMinute) {
                 playGong(); // Play sound when minute increases
                 previousMinute = minutes;
             }
-
+    
             timerElement.textContent = 
                 String(minutes).padStart(2, '0') + ':' + String(displaySeconds).padStart(2, '0');
         }
-
+    
         function startTimer() {
             timerContainer.style.backgroundColor = '#d0e7ff'; // Pastel blue when running
             requestWakeLock(); // Request wake lock
-
+    
             // Play the silent audio clip to unlock audio context on iOS
             if (!audioUnlocked) {
                 silentAudio.play().then(() => {
                     audioUnlocked = true; // Audio context is now unlocked
                     gongReady = true; // Allow gong to play after this
+                    playGong(); // Play gong sound on start
                 }).catch(error => console.log('Silent audio failed to play:', error));
             } else {
                 gongReady = true; // Allow gong sound to play after unlocking
+                playGong(); // Play gong sound on start
             }
-
+    
             timer = setInterval(() => {
                 seconds++;
                 updateTime();
             }, 1000);
         }
-
+    
         function stopTimer() {
             clearInterval(timer);
             timerContainer.style.backgroundColor = '#fff2b3'; // Pastel yellow when stopped
             releaseWakeLock(); // Release the wake lock when stopped
+            playGong(); // Play gong sound on pause
             gongReady = false; // Disable gong sound
         }
-
+    
         timerContainer.addEventListener("click", () => {
             if (!isRunning) {
                 startTimer();
@@ -135,7 +138,7 @@
             }
             isRunning = !isRunning;
         });
-
+    
         timerContainer.addEventListener("dblclick", () => {
             stopTimer();
             seconds = 0;
@@ -145,13 +148,14 @@
             timerContainer.style.backgroundColor = '#d4eacd'; // Reset to pastel green when idle
             releaseWakeLock(); // Release the wake lock on reset
         });
-
+    
         // Ensure the wake lock is released when the window is closed or refreshed
         window.addEventListener('beforeunload', releaseWakeLock);
-
+    
         // Initialize display to 00:00 and set background to pastel green (idle)
         updateTime();
         timerContainer.style.backgroundColor = '#d4eacd';
     </script>
+
 </body>
 </html>
