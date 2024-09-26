@@ -24,15 +24,15 @@
             align-items: center;
             width: 100vw;
             height: 100vh;
-            background-color: #f2f2f2; 
+            background-color: #d4eacd; /* Pastel green for idle */
             user-select: none;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
 
         h1 {
-            font-size: 8rem;
-            color: #444;
+            font-size: 5rem;
+            color: #333;
         }
     </style>
 </head>
@@ -41,32 +41,27 @@
         <h1 id="time">00:00</h1>
     </div>
 
+    <!-- Silent Audio file to unlock iOS audio -->
+    <audio id="silent-audio" src="silent.mp3" preload="auto"></audio>
+    
     <!-- Audio file for the gong sound -->
-    <audio id="gong-sound" preload="auto">
-        <source src="gong.mp3" type="audio/mpeg">
-        <source src="gong.ogg" type="audio/ogg">
-    </audio>
+    <audio id="gong-sound" src="gong.mp3" preload="auto"></audio>
 
-     <script>
+    <script>
         let timer;
         let isRunning = false;
         let seconds = 0;
         let previousMinute = 0;
         let gongReady = false; // Flag to check if the gong sound can be played
+        let audioUnlocked = false; // Flag to ensure audio is unlocked on iOS
 
         const timerElement = document.getElementById("time");
         const timerContainer = document.getElementById("timer");
         const gongSound = document.getElementById("gong-sound");
+        const silentAudio = document.getElementById("silent-audio");
 
-         function releaseWakeLock() {
-            if (wakeLock) {
-                wakeLock.release().then(() => {
-                    wakeLock = null;
-                    console.log('Screen Wake Lock has been released.');
-                });
-            }
-        }
         async function requestWakeLock() {
+            // Wake lock to prevent the screen from locking
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
                 console.log('Screen Wake Lock is active.');
@@ -74,52 +69,65 @@
                 console.error(`Failed to acquire wake lock: ${err.name}, ${err.message}`);
             }
         }
-        
-         function playGong() {
-            if (gongReady) {
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    console.log('Screen Wake Lock has been released.');
+                });
+            }
+        }
+
+        function playGong() {
+            if (gongReady && audioUnlocked) {
                 gongSound.currentTime = 0; // Reset sound to start
                 gongSound.play().catch(error => console.log('Audio playback failed:', error));
             }
         }
-    
+
         function updateTime() {
             const minutes = Math.floor(seconds / 60);
             const displaySeconds = seconds % 60;
-    
+
             // Play gong sound when minutes increase
             if (minutes > previousMinute) {
                 playGong(); // Play sound when minute increases
                 previousMinute = minutes;
             }
-    
+
             timerElement.textContent = 
                 String(minutes).padStart(2, '0') + ':' + String(displaySeconds).padStart(2, '0');
         }
-    
+
         function startTimer() {
-            timerContainer.style.backgroundColor = '#a6d854'; // Pastel blue when running
+            timerContainer.style.backgroundColor = '#d0e7ff'; // Pastel blue when running
             requestWakeLock(); // Request wake lock
-            gongReady = true; // Allow gong sound to play
-            playGong();
+
+            // Play the silent audio clip to unlock audio context on iOS
+            if (!audioUnlocked) {
+                silentAudio.play().then(() => {
+                    audioUnlocked = true; // Audio context is now unlocked
+                    gongReady = true; // Allow gong to play after this
+                }).catch(error => console.log('Silent audio failed to play:', error));
+            } else {
+                gongReady = true; // Allow gong sound to play after unlocking
+            }
+
             timer = setInterval(() => {
                 seconds++;
                 updateTime();
             }, 1000);
         }
-    
+
         function stopTimer() {
             clearInterval(timer);
-            timerContainer.style.backgroundColor = '#ffd92f'; // Pastel yellow when stopped
+            timerContainer.style.backgroundColor = '#fff2b3'; // Pastel yellow when stopped
             releaseWakeLock(); // Release the wake lock when stopped
             gongReady = false; // Disable gong sound
         }
-    
+
         timerContainer.addEventListener("click", () => {
-            // Play a silent sound initially to allow audio playback on iOS
-            if (gongSound.paused) {
-                playGong(); // This will unlock the audio context for iOS
-            }
-    
             if (!isRunning) {
                 startTimer();
             } else {
@@ -127,7 +135,7 @@
             }
             isRunning = !isRunning;
         });
-    
+
         timerContainer.addEventListener("dblclick", () => {
             stopTimer();
             seconds = 0;
@@ -138,8 +146,12 @@
             releaseWakeLock(); // Release the wake lock on reset
         });
 
+        // Ensure the wake lock is released when the window is closed or refreshed
         window.addEventListener('beforeunload', releaseWakeLock);
+
+        // Initialize display to 00:00 and set background to pastel green (idle)
         updateTime();
+        timerContainer.style.backgroundColor = '#d4eacd';
     </script>
 </body>
 </html>
